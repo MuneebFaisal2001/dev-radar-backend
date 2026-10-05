@@ -1,16 +1,10 @@
 const express = require('express');
-const databaseUtils = require('./utils/databaseUtils');
 const cors = require('cors');
-const routes = require('./routes');
 const http = require('http');
-const mongoose = require('mongoose');
 const app = express();
 const server = http.Server(app);
-const {setupWebsocket} = require('./websocket');
-setupWebsocket(server);
-mongoose.connect(databaseUtils.getDatabaseURI(), databaseUtils.getDatabaseOptions());
 app.use(cors());
 app.use(express.json());
-app.use(routes);
-
-server.listen(process.env.LISTEN_PORT);
+app.get('/', (req, res) => { res.json({ message: 'Dev Radar Backend running successfully!' }); });
+const PORT = process.env.LISTEN_PORT || 3333;
+server.listen(PORT, () => { console.log('Server is running on port ' + PORT); });
