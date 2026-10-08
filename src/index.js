@@ -5,6 +5,6 @@ const app = express();
 const server = http.Server(app);
 app.use(cors());
 app.use(express.json());
-app.get('/', (req, res) => { res.json({ message: 'Dev Radar Backend running successfully!' }); });
+app.get('/', (req, res) => { res.json({ message: 'Dev Radar Backend updated via automated pipeline v2!' }); });
 const PORT = process.env.LISTEN_PORT || 3333;
 server.listen(PORT, () => { console.log('Server is running on port ' + PORT); });
