@@ -16,6 +16,7 @@ jobs:
         shell: powershell
         run: |
           $ErrorActionPreference = 'Continue'
+          $env:PM2_HOME = "C:\Users\admin\.pm2"
           $targetDir = "C:\deployments\dev-radar-api"
 
           # 1. Folder check karein aur banayein
@@ -32,7 +33,7 @@ jobs:
           Set-Location -Path $targetDir
           npm install
 
-          # 4. PM2 check aur start/restart bina warning crash ke
+          # 4. Process start ya restart karein
           $processList = pm2 id dev-radar-api 2>$null
           if ($processList -and $processList.Trim() -ne "[]") {
               Write-Output "App already active, restarting..."
@@ -47,4 +48,5 @@ jobs:
       - name: Verify Running App
         shell: powershell
         run: |
+          $env:PM2_HOME = "C:\Users\admin\.pm2"
           pm2 list
