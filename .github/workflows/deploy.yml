@@ -15,29 +15,30 @@ jobs:
       - name: Create Target Folder and Deploy Code
         shell: powershell
         run: |
+          $ErrorActionPreference = 'Continue'
           $targetDir = "C:\deployments\dev-radar-api"
 
-          # 1. Folder check karein aur create karein
+          # 1. Folder check karein aur banayein
           if (!(Test-Path -Path $targetDir)) {
               New-Item -ItemType Directory -Path $targetDir -Force
               Write-Output "Folder created at: $targetDir"
           }
 
-          # 2. Code copy karein
+          # 2. Files copy karein
           Copy-Item -Path * -Destination $targetDir -Recurse -Force -Exclude "node_modules", ".git"
           Write-Output "Code successfully copied to $targetDir"
 
-          # 3. Target folder mein switch karein aur dependencies install karein
+          # 3. Target folder mein enter ho kar packages install karein
           Set-Location -Path $targetDir
           npm install
 
-          # 4. PM2 simple restart or start logic (Bina JSON crash ke)
-          pm2 describe dev-radar-api > $null 2>&1
-          if ($LASTEXITCODE -eq 0) {
-              Write-Output "App exists in PM2, restarting..."
+          # 4. PM2 check aur start/restart bina warning crash ke
+          $processList = pm2 id dev-radar-api 2>$null
+          if ($processList -and $processList.Trim() -ne "[]") {
+              Write-Output "App already active, restarting..."
               pm2 restart dev-radar-api
           } else {
-              Write-Output "App not running, starting new instance..."
+              Write-Output "Starting fresh instance..."
               pm2 start src/index.js --name "dev-radar-api"
           }
 
