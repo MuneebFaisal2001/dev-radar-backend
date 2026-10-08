@@ -17,28 +17,27 @@ jobs:
         run: |
           $targetDir = "C:\deployments\dev-radar-api"
 
-          # 1. Folder check karein aur na ho to banayein
+          # 1. Folder check karein aur create karein
           if (!(Test-Path -Path $targetDir)) {
               New-Item -ItemType Directory -Path $targetDir -Force
               Write-Output "Folder created at: $targetDir"
           }
 
-          # 2. Code ko target folder mein copy karein
+          # 2. Code copy karein
           Copy-Item -Path * -Destination $targetDir -Recurse -Force -Exclude "node_modules", ".git"
           Write-Output "Code successfully copied to $targetDir"
 
-          # 3. Target folder mein switch karke dependencies install karein
+          # 3. Target folder mein switch karein aur dependencies install karein
           Set-Location -Path $targetDir
           npm install
 
-          # 4. PM2 check aur start/restart logic
-          $app = pm2 jlist | ConvertFrom-Json | Where-Object { $_.name -eq "dev-radar-api" }
-
-          if ($app) {
-              Write-Output "App exists in PM2, restarting from deployment folder..."
+          # 4. PM2 simple restart or start logic (Bina JSON crash ke)
+          pm2 describe dev-radar-api > $null 2>&1
+          if ($LASTEXITCODE -eq 0) {
+              Write-Output "App exists in PM2, restarting..."
               pm2 restart dev-radar-api
           } else {
-              Write-Output "App does not exist in PM2, starting new instance..."
+              Write-Output "App not running, starting new instance..."
               pm2 start src/index.js --name "dev-radar-api"
           }
 
