@@ -1,9 +1,8 @@
-name: Deploy Pipeline
+name: Deploy Dev Radar Backend to Target Folder
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -13,20 +12,39 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Create Target Folder and Deploy Code
+        shell: powershell
         run: |
+          $targetDir = "C:\deployments\dev-radar-api"
+
+          # 1. Folder check karein aur na ho to banayein
+          if (!(Test-Path -Path $targetDir)) {
+              New-Item -ItemType Directory -Path $targetDir -Force
+              Write-Output "Folder created at: $targetDir"
+          }
+
+          # 2. Code ko target folder mein copy karein
+          Copy-Item -Path * -Destination $targetDir -Recurse -Force -Exclude "node_modules", ".git"
+          Write-Output "Code successfully copied to $targetDir"
+
+          # 3. Target folder mein switch karke dependencies install karein
+          Set-Location -Path $targetDir
           npm install
 
-      - name: Start or Restart Backend via PM2
-        run: |
+          # 4. PM2 check aur start/restart logic
           $app = pm2 jlist | ConvertFrom-Json | Where-Object { $_.name -eq "dev-radar-api" }
+
           if ($app) {
+              Write-Output "App exists in PM2, restarting from deployment folder..."
               pm2 restart dev-radar-api
           } else {
+              Write-Output "App does not exist in PM2, starting new instance..."
               pm2 start src/index.js --name "dev-radar-api"
           }
 
-      - name: Check Status and Logs
+          pm2 save
+
+      - name: Verify Running App
+        shell: powershell
         run: |
           pm2 list
-          pm2 logs dev-radar-api --lines 10 --nostream
